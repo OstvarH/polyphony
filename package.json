@@ -1,0 +1,61 @@
+{
+  "name": "polyphony",
+  "version": "0.1.0",
+  "description": "Local-first AI agent orchestration: describe a project, get a plan of agents, models and dependencies, approve it, and watch the agents build it live. Bring your own API keys.",
+  "license": "MIT",
+  "author": "OstvarH",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/OstvarH/polyphony.git"
+  },
+  "type": "module",
+  "bin": {
+    "polyphony": "bin/polyphony.mjs"
+  },
+  "files": [
+    "bin",
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=22.18"
+  },
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "dev:server": "node --watch src/server/main.ts",
+    "dev:web": "vite",
+    "build": "tsc -p tsconfig.build.json && vite build",
+    "start": "node dist/server/main.js",
+    "typecheck": "tsc -p tsconfig.json",
+    "lint": "biome check .",
+    "format": "biome check --write .",
+    "test": "vitest run",
+    "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm build"
+  },
+  "packageManager": "pnpm@10.28.0",
+  "dependencies": {
+    "@anthropic-ai/sdk": "1.14.0",
+    "@fastify/static": "10.1.12",
+    "@google/genai": "3.6.1",
+    "fastify": "5.12.8",
+    "openai": "7.64.0",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.6.9",
+    "@tailwindcss/vite": "4.3.5",
+    "@types/node": "^24.19.2",
+    "@types/react": "19.3.1",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.3.0",
+    "@xyflow/react": "13.0.3",
+    "lucide-react": "1.79.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "tailwindcss": "4.3.5",
+    "typescript": "7.0.2",
+    "vite": "8.3.8",
+    "vitest": "5.1.1"
+  }
+}
