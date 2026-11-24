@@ -79,6 +79,15 @@ describe('HTTP API', () => {
     expect(outside.status).toBe(400);
   });
 
+  it('gives a project without a workspace its own folder', async () => {
+    const { api } = await setup();
+    const { workspace: _w, ...input } = projectInput();
+    const first = await api('POST', '/api/projects', { ...input, name: 'My App!' });
+    const second = await api('POST', '/api/projects', { ...input, name: 'My App!' });
+    expect(first.body.workspace).toMatch(/my-app$/);
+    expect(first.body.workspace).not.toBe(second.body.workspace);
+  });
+
   it('saves an edited plan as a new version and rejects broken ones', async () => {
     const { api } = await setup();
     const projectId = (await api('POST', '/api/projects', projectInput())).body.id;

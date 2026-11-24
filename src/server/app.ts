@@ -1,4 +1,6 @@
 import { existsSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import fastifyStatic from '@fastify/static';
 import Fastify, { type FastifyInstance, type FastifyReply } from 'fastify';
 import { z } from 'zod';
@@ -28,7 +30,7 @@ const ProjectInputSchema = z.object({
   instructions: z.string().max(20_000).default(''),
   deliverables: z.array(z.string().trim().min(1)).max(100).default([]),
   acceptanceCriteria: z.array(z.string().trim().min(1)).max(100).default([]),
-  workspace: z.string().trim().min(1),
+  workspace: z.string().trim().default(''),
   repository: z
     .string()
     .trim()
@@ -65,6 +67,8 @@ export interface AppOptions {
   webDir?: string;
   logger?: boolean;
   mockDelayMs?: number;
+  /** Parent folder for projects created without a workspace. */
+  workspaceRoot?: string;
 }
 
 export async function buildApp(options: AppOptions): Promise<FastifyInstance> {
@@ -233,7 +237,21 @@ export async function buildApp(options: AppOptions): Promise<FastifyInstance> {
   app.get('/api/projects', async () => store.listProjects());
 
   app.post('/api/projects', async (request, reply) => {
-    const project = store.createProject(ProjectInputSchema.parse(request.body));
+    const input = ProjectInputSchema.parse(request.body);
+    if (!input.workspace) {
+      const slug =
+        input.name
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-|-$/g, '') || 'project';
+      const root = options.workspaceRoot ?? join(tmpdir(), 'polyphony-workspaces');
+      let workspace = join(root, slug);
+      const taken = new Set(store.listProjects().map((p) => p.workspace));
+      for (let n = 2; existsSync(workspace) || taken.has(workspace); n++)
+        workspace = join(root, `${slug}-${n}`);
+      input.workspace = workspace;
+    }
+    const project = store.createProject(input);
     return reply.code(201).send(project);
   });
 

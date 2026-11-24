@@ -13,7 +13,13 @@ mkdirSync(home, { recursive: true });
 const store = new Store(join(home, 'polyphony.db'));
 const interrupted = store.failInterruptedRuns();
 const webDir = fileURLToPath(new URL('../web', import.meta.url));
-const app = await buildApp({ store, secrets: SecretBox.fromHome(home), webDir, logger: false });
+const app = await buildApp({
+  store,
+  secrets: SecretBox.fromHome(home),
+  webDir,
+  logger: false,
+  workspaceRoot: join(home, 'workspaces'),
+});
 
 await app.listen({ host: '127.0.0.1', port });
 console.log(`\n  Polyphony is running at http://127.0.0.1:${port}`);
