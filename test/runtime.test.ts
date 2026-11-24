@@ -290,7 +290,9 @@ describe('Workspace', () => {
   it('keeps every path inside the root', () => {
     const ws = new Workspace(mkdtempSync(join(tmpdir(), 'polyphony-ws-')));
     expect(ws.write('src/a.ts', 'x')).toBe('src/a.ts');
-    for (const bad of ['../escape.txt', '/etc/passwd', 'src/../../x', 'C:\\Windows\\x']) {
+    // A drive path is only absolute on Windows; elsewhere it is an ordinary file name.
+    const windowsOnly = process.platform === 'win32' ? ['C:\\Windows\\x'] : [];
+    for (const bad of ['../escape.txt', '/etc/passwd', 'src/../../x', ...windowsOnly]) {
       expect(() => ws.resolve(bad)).toThrow(WorkspaceError);
     }
   });
