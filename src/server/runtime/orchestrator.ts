@@ -104,11 +104,12 @@ export class Orchestrator {
     }
     for (const agent of Object.values(state.agents)) {
       const mine = Object.values(state.tasks).filter((t) => t.agent === agent.id);
+      // Agents without tasks of their own (reviewers) count as completed when the run is.
       const status =
-        mine.length > 0 && mine.every((t) => t.status === 'done')
-          ? 'completed'
-          : agent.status === 'failed'
-            ? 'failed'
+        agent.status === 'failed'
+          ? 'failed'
+          : mine.every((t) => t.status === 'done') && !this.#abort.signal.aborted
+            ? 'completed'
             : 'idle';
       emit('agent.status', { agent: agent.id, status, task: null });
     }

@@ -276,7 +276,10 @@ export function applyEvent(state: RunState, event: RunEvent): RunState {
       if (event.data.reviewNotes !== undefined) task.reviewNotes = event.data.reviewNotes;
       if (event.data.status === 'done') {
         const agent = state.agents[task.agent];
-        if (agent) agent.tasksDone += 1;
+        if (agent) {
+          agent.tasksDone += 1;
+          agent.activity = `Finished “${task.title}”.`;
+        }
       }
       log({
         agent: task.agent,

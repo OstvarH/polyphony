@@ -403,7 +403,8 @@ export async function buildApp(options: AppOptions): Promise<FastifyInstance> {
         'cache-control': 'no-cache',
         connection: 'keep-alive',
       });
-      let last = Number(request.query.after ?? 0) || 0;
+      // On reconnect the browser sends the last id it saw.
+      let last = Number(request.headers['last-event-id'] ?? request.query.after ?? 0) || 0;
       const send = (event: RunEvent | { seq: number; type: string }) => {
         if (event.seq <= last) return;
         last = event.seq;
@@ -414,8 +415,18 @@ export async function buildApp(options: AppOptions): Promise<FastifyInstance> {
       for (const event of store.listEvents(run.id, last, 100_000))
         send(event as unknown as RunEvent);
       for (const event of backlog.splice(0)) send(event);
-      const stop = runs.subscribe(run.id, send);
       unsubscribe();
+      // A finished run has nothing more to say: close instead of holding the connection.
+      const ended = (phase: string) => ['completed', 'failed', 'cancelled'].includes(phase);
+      const live = runs.state(run.id);
+      if (!live || ended(live.phase)) {
+        res.end();
+        return;
+      }
+      const stop = runs.subscribe(run.id, (event) => {
+        send(event);
+        if (event.type === 'run.phase' && ended(event.data.phase)) res.end();
+      });
       const ping = setInterval(() => res.write(': ping\n\n'), 15_000);
       request.raw.on('close', () => {
         clearInterval(ping);

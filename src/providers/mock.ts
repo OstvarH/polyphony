@@ -202,7 +202,10 @@ export function mockPlan(description: string): Plan {
     channels.push({ from: 'db-engineer', to: 'backend-dev', purpose: 'Share the schema.' });
 
   return {
-    summary: `Plan for: ${description.split('\n')[0]?.slice(0, 160) ?? 'the project'}`,
+    summary: `A ${layers.length}-layer team of ${agents.length} agents for ${
+      /^# Project: (.+)$/m.exec(description)?.[1] ??
+      (description.split('\n')[0]?.slice(0, 120) || 'the project')
+    }, with ${tasks.length} tasks.`,
     architecture: {
       stack,
       notes: 'Generated offline by the mock model from keywords in the description.',
